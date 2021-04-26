@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 
-const Input = ({ setSearch }) => {
+const Input = ({ search }) => {
 	const [ input, setInput ] = useState('');
 	const handleSubmit = (e) => {
 		e.preventDefault();
-		setSearch(input);
+		search(input);
 	};
 
 	return (

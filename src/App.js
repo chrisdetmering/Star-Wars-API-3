@@ -9,50 +9,43 @@ import Table from './Components/Table'
 
 const App = () => {
   const [characters, setCharacters] = useState([]);
-  const [search, setSearch] = useState("");
- 
   useEffect(() => {
     axios.get('https://swapi.dev/api/people/')
-      .then((res) => getOtherData(res.data.results))
+      .then((res) =>  getMissingData(res.data.results))
   }, []);
 
-  useEffect(() => {
-    handleSearch(search)
-  }, [search])
-
-  const getOtherData = async (characters) => {
+  const getMissingData = async (characters) => {
     for (const character of characters) {
-      await getPlanets(character);
-      await getSpecies(character);
+      character.homeworld = await getPlanets(character.homeworld);
+      character.species = await getSpecies(character.species);
     };
     setCharacters(characters);
   };
 
-  const getPlanets = async (character) => {
-   const planet = character.homeworld;
-   const planetURL = planet.replace('http', 'https')
-   const response = await axios.get(planetURL);
-   character.homeworld = response.data.name;
+  const getPlanets = async (planetUrl) => {
+   const planetURLHTTPS = planetUrl.replace('http', 'https')
+   const response = await axios.get(planetURLHTTPS);
+   return response.data.name
   };
   
-  const getSpecies = async (character) => {
-    if (character.species.length === 0){
-      character.species = "Human";
+  const getSpecies = async (speciesArray) => {
+    if (speciesArray.length === 0){
+      return "Human";
     } else {
-    const speciesURL = character.species.toString().replace("http", "https")
+    const speciesURL = speciesArray[0].replace("http", "https")
     const response = await axios.get(speciesURL);
-    character.species = response.data.name
+    return response.data.name
     };
   };
 
 const handlePageChange = (pageNumber) => {
   axios.get(`https://swapi.dev/api/people/?page=${pageNumber}`)
-  .then((res) => getOtherData(res.data.results))
+  .then((res) => getMissingData(res.data.results))
 }
 
 const handleSearch = (search) => {
   axios.get(`https://swapi.dev/api/people/?search=${search}`)
-  .then((res) => getOtherData(res.data.results))
+  .then((res) => getMissingData(res.data.results))
 }
 
   return (
@@ -60,11 +53,7 @@ const handleSearch = (search) => {
       <header className="text-center">
         <h1 className="font-weight-bold">Star Wars</h1>
       </header>
-      <br></br>
-      <Input 
-      setSearch={setSearch}
-      />
-      <br></br>
+      <Input search={handleSearch} />
       <Table characters={characters} />
       <ReactPaginate
       pageCount="9"
